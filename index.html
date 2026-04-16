@@ -321,9 +321,8 @@ nav.top {
 
 .stencil-host {
               position: relative !important;
-              display: inline-block !important;
-              color: transparent !important;
-              line-height: inherit;
+              display: inline !important;
+              color: inherit !important;
             }
             .hero .sub {
               margin-top: 40px !important;
@@ -2571,7 +2570,7 @@ footer {
 <nav class="top">
       <div class="logo">
         <img
-          src="https://kp.neat-studio.ru/media/logo/NeatStudio-black.svg"
+          src="img/logo-neat.svg"
           alt="Neat Studio"
         />
       </div>
@@ -2592,7 +2591,7 @@ footer {
           </div>
           <div class="chip" style="gap: 14px; padding: 8px 16px">
             <img
-              src="https://kp.neat-studio.ru/media/logo/crgt.png"
+              src="img/logo-crgt.png"
               alt="ЦРГТ"
               style="height: 22px; width: auto; display: block"
             />
@@ -2600,16 +2599,15 @@ footer {
               >×</span
             >
             <img
-              src="https://kp.neat-studio.ru/media/logo/NeatStudio-black.svg"
+              src="img/logo-neat.svg"
               alt="Neat Studio"
               style="height: 18px; width: auto; display: block"
             />
           </div>
         </div>
         <h1>
-          Превращаем каталог
-          <span class="stencil-host" data-text="гидроабразивного">гидроабразивного</span>
-          <span class="stencil-host" data-text="оборудования">оборудования</span>
+          Превращаем каталог<br>
+          гидроабразивного оборудования<br>
           в <span class="accent">инструмент продаж</span>
         </h1>
         <p class="sub reveal">
@@ -4181,7 +4179,7 @@ footer {
           style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap"
         >
           <img
-            src="https://kp.neat-studio.ru/media/logo/NeatStudio-black.svg"
+            src="img/logo-neat.svg"
             alt="Neat Studio"
             style="height: 20px; width: auto; opacity: 0.55"
           />
@@ -4192,7 +4190,7 @@ footer {
           style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap"
         >
           <img
-            src="https://kp.neat-studio.ru/media/logo/crgt.png"
+            src="img/logo-crgt.png"
             alt="ЦРГТ"
             style="height: 18px; width: auto; opacity: 0.45"
           />
@@ -4203,239 +4201,6 @@ footer {
 
 <script>
           gsap.registerPlugin(ScrollTrigger);
-
-(() => {
-            const hosts = [...document.querySelectorAll(".stencil-host")];
-            if (!hosts.length) return;
-
-document.fonts.load("800 1em Manrope").finally(() => {
-              const dpr = Math.min(window.devicePixelRatio || 1, 2);
-              const items = [];
-
-hosts.forEach((host) => {
-                const rect = host.getBoundingClientRect();
-                const W = rect.width,
-                  H = rect.height;
-                if (W < 2 || H < 2) return;
-                const text = host.dataset.text;
-                const fontSize = parseFloat(getComputedStyle(host).fontSize);
-                const fontStr = `800 ${fontSize}px Manrope, sans-serif`;
-
-const cvs = document.createElement("canvas");
-                cvs.width = Math.ceil(W * dpr);
-                cvs.height = Math.ceil(H * dpr);
-                cvs.style.cssText =
-                  "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1";
-                host.appendChild(cvs);
-                const ctx = cvs.getContext("2d");
-                ctx.scale(dpr, dpr);
-
-const S = 0.3;
-                const oW = Math.ceil(W * S),
-                  oH = Math.ceil(H * S);
-                const off = document.createElement("canvas");
-                off.width = oW;
-                off.height = oH;
-                const octx = off.getContext("2d");
-                const oFontStr = `800 ${fontSize * S}px Manrope, sans-serif`;
-                octx.font = oFontStr;
-                octx.fillStyle = "#000";
-                octx.textBaseline = "alphabetic";
-                const om = octx.measureText(text);
-                const ofA = om.fontBoundingBoxAscent ?? om.actualBoundingBoxAscent;
-                const ofD =
-                  om.fontBoundingBoxDescent ?? om.actualBoundingBoxDescent;
-                const oBaselineY = (oH - ofA - ofD) / 2 + ofA;
-                octx.fillText(text, 1, oBaselineY);
-
-const d = octx.getImageData(0, 0, oW, oH).data;
-                const raw = [];
-                for (let y = 1; y < oH - 1; y++) {
-                  for (let x = 1; x < oW - 1; x++) {
-                    const i = (y * oW + x) * 4;
-                    if (d[i + 3] < 80) continue;
-                    if (
-                      d[((y - 1) * oW + x) * 4 + 3] < 80 ||
-                      d[((y + 1) * oW + x) * 4 + 3] < 80 ||
-                      d[(y * oW + x - 1) * 4 + 3] < 80 ||
-                      d[(y * oW + x + 1) * 4 + 3] < 80
-                    ) {
-                      raw.push([x / S, y / S]);
-                    }
-                  }
-                }
-                if (raw.length < 6) return;
-
-const CELL = 6;
-                const cells = new Map();
-                raw.forEach(([x, y], i) => {
-                  const k = `${~~(x / CELL)},${~~(y / CELL)}`;
-                  if (!cells.has(k)) cells.set(k, []);
-                  cells.get(k).push(i);
-                });
-                const used = new Uint8Array(raw.length);
-                const path = [raw[0]];
-                used[0] = 1;
-                let [lx, ly] = raw[0];
-                for (let n = 1; n < raw.length; n++) {
-                  const cx = ~~(lx / CELL),
-                    cy = ~~(ly / CELL);
-                  let best = -1,
-                    bd = Infinity;
-                  outer: for (let dy = -3; dy <= 3; dy++)
-                    for (let dx = -3; dx <= 3; dx++) {
-                      const cell = cells.get(`${cx + dx},${cy + dy}`);
-                      if (!cell) continue;
-                      for (const i of cell) {
-                        if (used[i]) continue;
-                        const dd = (raw[i][0] - lx) ** 2 + (raw[i][1] - ly) ** 2;
-                        if (dd < bd) {
-                          bd = dd;
-                          best = i;
-                        }
-                      }
-                    }
-                  if (best < 0) {
-                    for (let i = 0; i < raw.length; i++) {
-                      if (!used[i]) {
-                        best = i;
-                        break;
-                      }
-                    }
-                    if (best < 0) break;
-                  }
-                  used[best] = 1;
-                  path.push(raw[best]);
-                  [lx, ly] = raw[best];
-                }
-
-ctx.font = `800 ${fontSize}px Manrope, sans-serif`;
-                ctx.textBaseline = "alphabetic";
-                const bm = ctx.measureText(text);
-                const fA = bm.fontBoundingBoxAscent ?? bm.actualBoundingBoxAscent;
-                const fD = bm.fontBoundingBoxDescent ?? bm.actualBoundingBoxDescent;
-                const baselineY = (H - fA - fD) / 2 + fA;
-
-items.push({ ctx, W, H, fontSize, text, path, baselineY });
-              });
-
-if (!items.length) return;
-
-const combined = [];
-              items.forEach((it, ii) =>
-                it.path.forEach((pt) => combined.push({ ii, x: pt[0], y: pt[1] })),
-              );
-              const N = combined.length;
-              if (!N) return;
-              const TRAIL = Math.min(100, ~~(N * 0.12));
-              const skip = new Uint8Array(N);
-              for (let i = 1; i < N; i++) {
-                const a = combined[i - 1],
-                  b = combined[i];
-                if (a.ii !== b.ii || (b.x - a.x) ** 2 + (b.y - a.y) ** 2 > 900)
-                  skip[i] = 1;
-              }
-
-let headF = 0; // float for sub-step advancement
-              let head = 0;
-              let rafId;
-
-function frame() {
-                items.forEach(({ ctx, W, H, fontSize, text, baselineY }) => {
-                  ctx.clearRect(0, 0, W, H);
-                  ctx.save();
-                  ctx.font = `800 ${fontSize}px Manrope, sans-serif`;
-                  ctx.textBaseline = "alphabetic";
-                  ctx.strokeStyle = "rgba(15,23,42,0.32)";
-                  ctx.lineWidth = 1.5;
-                  ctx.strokeText(text, 0, baselineY);
-                  ctx.restore();
-                });
-
-items.forEach((it, ii) => {
-                  const ctx = it.ctx;
-                  ctx.save();
-                  const start = Math.max(0, head - TRAIL);
-                  for (let t = start; t < head; t++) {
-                    const pt = combined[t % N];
-                    if (pt.ii !== ii || skip[t % N]) continue;
-                    const alpha = ((t - start) / TRAIL) * 0.85;
-                    ctx.fillStyle = `rgba(43,183,255,${alpha})`;
-                    ctx.beginPath();
-                    ctx.arc(pt.x, pt.y, 1.2, 0, 6.283);
-                    ctx.fill();
-                  }
-                  ctx.restore();
-                });
-
-const cur = combined[head % N];
-                const { ctx } = items[cur.ii];
-                const g = ctx.createRadialGradient(
-                  cur.x,
-                  cur.y,
-                  0,
-                  cur.x,
-                  cur.y,
-                  20,
-                );
-                g.addColorStop(0, "rgba(43,183,255,.92)");
-                g.addColorStop(0.4, "rgba(43,183,255,.38)");
-                g.addColorStop(1, "rgba(43,183,255,0)");
-                ctx.fillStyle = g;
-                ctx.beginPath();
-                ctx.arc(cur.x, cur.y, 20, 0, 6.283);
-                ctx.fill();
-                ctx.fillStyle = "#fff";
-                ctx.beginPath();
-                ctx.arc(cur.x, cur.y, 2.2, 0, 6.283);
-                ctx.fill();
-                if (Math.random() < 0.18) {
-                  for (let s = 0; s < 2; s++) {
-                    const a = Math.random() * 6.283,
-                      r = 5 + Math.random() * 12;
-                    ctx.fillStyle = `rgba(255,255,255,${0.4 + Math.random() * 0.5})`;
-                    ctx.beginPath();
-                    ctx.arc(
-                      cur.x + Math.cos(a) * r,
-                      cur.y + Math.sin(a) * r,
-                      0.8,
-                      0,
-                      6.283,
-                    );
-                    ctx.fill();
-                  }
-                }
-
-headF = (headF + 0.5) % N; // was +2, now ÷4
-                head = Math.floor(headF);
-                rafId = requestAnimationFrame(frame);
-              }
-
-gsap.delayedCall(2, () => {
-                rafId = requestAnimationFrame(frame);
-              });
-            });
-          })();
-
-const sparks = document.querySelectorAll(".hero .spark");
-          sparks.forEach((s, i) => {
-            const ang = (Math.random() * 1.4 + 0.3) * Math.PI;
-            const dist = 80 + Math.random() * 140;
-            gsap.set(s, { left: "50%", top: "50%" });
-            gsap.fromTo(
-              s,
-              { opacity: 1, x: 0, y: 0, scale: 1 },
-              {
-                opacity: 0,
-                x: Math.cos(ang) * dist * (i % 2 ? -1 : 1),
-                y: -Math.sin(ang) * dist,
-                scale: 0.2,
-                duration: 1.1 + Math.random() * 0.6,
-                ease: "power2.out",
-                delay: 0.35 + i * 0.04,
-              },
-            );
-          });
 
 gsap.utils.toArray(".reveal").forEach((el) => {
             if (el.closest(".hero")) return;
